@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pandas
+numpy
+faiss-cpu
+sentence-transformers
+llama-cpp-python
+huggingface_hub
+pydantic

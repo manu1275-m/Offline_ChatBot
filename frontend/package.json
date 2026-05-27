@@ -1,0 +1,55 @@
+{
+  "name": "offlinechatbot",
+  "version": "1.0.0",
+  "private": true,
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "electron": "electron .",
+    "dist": "npm run build && electron-builder"
+  },
+  "dependencies": {
+    "framer-motion": "^12.38.0",
+    "next": "16.2.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-hot-toast": "^2.6.0",
+    "react-icons": "^5.6.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "babel-plugin-react-compiler": "1.0.0",
+    "concurrently": "^9.2.1",
+    "electron": "^42.0.0",
+    "electron-builder": "^26.0.12",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.6",
+    "tailwindcss": "^4",
+    "wait-on": "^9.0.10"
+  },
+  "build": {
+    "appId": "com.offline.chatbot",
+    "productName": "OfflineChatBot",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "out",
+        "to": "app/out"
+      },
+      {
+        "from": "../dist/OfflineChatbotBackend",
+        "to": "backend"
+      }
+    ],
+    "win": {
+      "target": "nsis"
+    }
+  }
+}

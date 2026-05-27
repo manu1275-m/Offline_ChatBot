@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+
+dist/
+build/
+*.spec
+
+models/
+*.gguf
+*.safetensors
+
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/release/
+frontend/package-lock.json
