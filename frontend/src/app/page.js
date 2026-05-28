@@ -30,6 +30,12 @@ export default function Home() {
   const [started, setStarted] =
   useState(false);
 
+  const [chats, setChats] =
+  useState([]);
+
+  const [activeChatId, setActiveChatId] =
+  useState(null);
+
   const [messages, setMessages] =
   useState([]);
 
@@ -39,7 +45,61 @@ export default function Home() {
   const [loading, setLoading] =
   useState(false);
 
+  const [contextMenu, setContextMenu] =
+  useState(null);
+
   const chatRef = useRef(null);
+
+  const sortChats = (chatList) => {
+    return [...chatList].sort((a,b) => {
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+      return new Date(b.updatedAt) - new Date(a.updatedAt);
+    });
+  };
+
+useEffect(() => {
+
+  const savedChats =
+  localStorage.getItem("offline_chats");
+
+  const parsedChats =
+  savedChats
+  ? JSON.parse(savedChats)
+  : [];
+
+  setChats(sortChats(parsedChats));
+
+  setActiveChatId(null);
+
+  setMessages([]);
+
+  setStarted(false);
+
+}, []);
+
+  useEffect(() => {
+
+    localStorage.setItem(
+      "offline_chats",
+      JSON.stringify(chats)
+    );
+
+  }, [chats]);
+
+  useEffect(() => {
+
+    const closeMenu = () => {
+      setContextMenu(null);
+    };
+
+    window.addEventListener("click", closeMenu);
+
+    return () => {
+      window.removeEventListener("click", closeMenu);
+    };
+
+  }, []);
 
   useEffect(() => {
 
@@ -52,11 +112,58 @@ export default function Home() {
 
   }, [messages]);
 
-  // SEND MESSAGE
+  const saveCurrentChat = (updatedMessages) => {
+
+    if (!activeChatId) return;
+
+    setChats((prevChats) =>
+      sortChats(
+      prevChats.map((chat) =>
+        chat.id === activeChatId
+          ? {
+              ...chat,
+              messages: updatedMessages,
+              title:
+                updatedMessages[0]?.text?.slice(0, 28)
+                || "New Chat",
+              updatedAt: new Date().toISOString(),
+            }
+          : chat
+      )
+      )
+    );
+
+  };
 
   const sendMessage = async () => {
 
     if (!input.trim()) return;
+
+    let currentChatId = activeChatId;
+
+    if (!currentChatId) {
+
+      currentChatId = Date.now().toString();
+
+      const newChatData = {
+        id: currentChatId,
+        title: input.slice(0, 28),
+        messages: [],
+        pinned: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      setChats((prev) =>
+        sortChats([
+          newChatData,
+          ...prev,
+        ])
+      );
+
+      setActiveChatId(currentChatId);
+
+    }
 
     const userMessage = {
 
@@ -66,13 +173,15 @@ export default function Home() {
 
     };
 
-    setMessages((prev) => [
+    const updatedUserMessages = [
 
-      ...prev,
+      ...messages,
 
       userMessage,
 
-    ]);
+    ];
+
+    setMessages(updatedUserMessages);
 
     const question = input;
 
@@ -111,9 +220,9 @@ export default function Home() {
       const data =
       await response.json();
 
-      setMessages((prev) => [
+      const finalMessages = [
 
-        ...prev,
+        ...updatedUserMessages,
 
         {
 
@@ -123,7 +232,26 @@ export default function Home() {
 
         },
 
-      ]);
+      ];
+
+      setMessages(finalMessages);
+
+      setChats((prevChats) =>
+        sortChats(
+        prevChats.map((chat) =>
+          chat.id === currentChatId
+            ? {
+                ...chat,
+                messages: finalMessages,
+                title:
+                  finalMessages[0]?.text?.slice(0, 28)
+                  || "New Chat",
+                updatedAt: new Date().toISOString(),
+              }
+            : chat
+        )
+        )
+      );
 
     } catch {
 
@@ -131,43 +259,163 @@ export default function Home() {
         "Backend not running"
       );
 
+      saveCurrentChat(updatedUserMessages);
+
     }
 
     setLoading(false);
 
   };
 
-  // CLEAR CHAT
-
   const clearChat = () => {
 
     setMessages([]);
 
-    toast.success(
-      "Chat Cleared"
-    );
+    setInput("");
+
+    if (activeChatId) {
+
+      setChats((prevChats) =>
+        sortChats(
+        prevChats.map((chat) =>
+          chat.id === activeChatId
+            ? {
+                ...chat,
+                messages: [],
+                title: "New Chat",
+                updatedAt: new Date().toISOString(),
+              }
+            : chat
+        )
+        )
+      );
+
+    }
 
   };
 
-  // SUGGESTIONS
+  const newChat = () => {
 
-  const suggestions = [
+    const id = Date.now().toString();
 
-    "Top HR Questions",
+    const newChatData = {
+      id,
+      title: "New Chat",
+      messages: [],
+      pinned: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
 
-    "Tell me about yourself",
+    setChats((prev) =>
+      sortChats([
+        newChatData,
+        ...prev,
+      ])
+    );
 
-    "Java Interview Questions",
+    setActiveChatId(id);
 
-    "DSA Questions",
+    setMessages([]);
 
-    "Resume Tips",
+    setInput("");
 
-    "General Conversation",
+    setStarted(true);
 
-  ];
+  };
 
-  // LANDING PAGE
+  const openChat = (chat) => {
+
+    setActiveChatId(chat.id);
+
+    setMessages(chat.messages);
+
+    setInput("");
+
+    setStarted(true);
+
+  };
+
+  const togglePinChat = (chatId) => {
+
+    setChats((prevChats) =>
+      sortChats(
+        prevChats.map((chat) =>
+          chat.id === chatId
+            ? {
+                ...chat,
+                pinned: !chat.pinned,
+                updatedAt: new Date().toISOString(),
+              }
+            : chat
+        )
+      )
+    );
+
+    setContextMenu(null);
+
+  };
+
+  const deleteChat = (chatId) => {
+
+    const remainingChats =
+    chats.filter((chat) =>
+      chat.id !== chatId
+    );
+
+    setChats(sortChats(remainingChats));
+
+    setContextMenu(null);
+
+    if (chatId === activeChatId) {
+
+      if (remainingChats.length > 0) {
+
+        const nextChat =
+        sortChats(remainingChats)[0];
+
+        setActiveChatId(nextChat.id);
+
+        setMessages(nextChat.messages);
+
+      } else {
+
+        const id = Date.now().toString();
+
+        const newChatData = {
+          id,
+          title: "New Chat",
+          messages: [],
+          pinned: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        setChats([newChatData]);
+
+        setActiveChatId(id);
+
+        setMessages([]);
+
+      }
+
+    }
+
+    setInput("");
+
+  };
+
+  const openContextMenu = (e, chat) => {
+
+    e.preventDefault();
+
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      chat,
+    });
+
+  };
 
   if (!started) {
 
@@ -177,13 +425,9 @@ export default function Home() {
 
         <Toaster />
 
-        {/* GLOW */}
-
         <div className="glow glow1"></div>
 
         <div className="glow glow2"></div>
-
-        {/* NAVBAR */}
 
         <nav className="navbar">
 
@@ -202,8 +446,6 @@ export default function Home() {
           </button>
 
         </nav>
-
-        {/* HERO */}
 
         <motion.div
 
@@ -253,13 +495,8 @@ export default function Home() {
           <p>
 
             Smart Offline AI Assistant
-            for Placements, Interviews,
-            DSA, Resume Preparation
-            and General Conversations
 
           </p>
-
-          {/* BUTTONS */}
 
           <div className="hero-buttons">
 
@@ -267,9 +504,7 @@ export default function Home() {
 
               className="primary-btn"
 
-              onClick={() =>
-                setStarted(true)
-              }
+              onClick={newChat}
 
             >
 
@@ -305,8 +540,6 @@ export default function Home() {
 
         </motion.div>
 
-        {/* FEATURES */}
-
         <section
           className="features"
           id="features"
@@ -329,10 +562,10 @@ export default function Home() {
 
               icon:<FaBrain />,
 
-              title:"Offline Phi AI",
+              title:"Offline AI",
 
               desc:
-              "Runs locally without internet using Phi AI model.",
+              "Runs locally without internet.",
 
             },
 
@@ -389,15 +622,84 @@ export default function Home() {
     );
   }
 
-  // CHAT PAGE
-
   return (
 
     <main className="chat-layout">
 
       <Toaster />
 
-      {/* SIDEBAR */}
+      {contextMenu && (
+
+        <div
+          onClick={(e) =>
+            e.stopPropagation()
+          }
+          style={{
+            position: "fixed",
+            top: contextMenu.y,
+            left: contextMenu.x,
+            zIndex: 9999,
+            minWidth: "170px",
+            padding: "8px",
+            borderRadius: "14px",
+            background: "rgba(15,23,42,0.96)",
+            border: "1px solid rgba(255,255,255,0.12)",
+            boxShadow: "0 20px 45px rgba(0,0,0,0.35)",
+            backdropFilter: "blur(18px)",
+          }}
+        >
+
+          <button
+            onClick={() =>
+              togglePinChat(
+                contextMenu.chat.id
+              )
+            }
+            style={{
+              width: "100%",
+              padding: "12px",
+              border: "none",
+              borderRadius: "10px",
+              background: "transparent",
+              color: "white",
+              textAlign: "left",
+              cursor: "pointer",
+              fontSize: "14px",
+            }}
+          >
+
+            {contextMenu.chat.pinned
+              ? "Unpin Chat"
+              : "Pin Chat"}
+
+          </button>
+
+          <button
+            onClick={() =>
+              deleteChat(
+                contextMenu.chat.id
+              )
+            }
+            style={{
+              width: "100%",
+              padding: "12px",
+              border: "none",
+              borderRadius: "10px",
+              background: "transparent",
+              color: "#ff6b6b",
+              textAlign: "left",
+              cursor: "pointer",
+              fontSize: "14px",
+            }}
+          >
+
+            Delete Chat
+
+          </button>
+
+        </div>
+
+      )}
 
       <aside className="sidebar">
 
@@ -413,6 +715,7 @@ export default function Home() {
 
           <button
             className="new-chat-btn"
+            onClick={newChat}
           >
 
             <FaPlus />
@@ -421,25 +724,33 @@ export default function Home() {
 
           </button>
 
-          {/* HISTORY */}
-
           <div className="chat-history">
 
-            <div>
-              HR Interview
-            </div>
+            {chats.map((chat) => (
 
-            <div>
-              DSA Practice
-            </div>
+              <div
+                key={chat.id}
+                onClick={() =>
+                  openChat(chat)
+                }
+                onContextMenu={(e) =>
+                  openContextMenu(e, chat)
+                }
+                style={{
+                  border:
+                    chat.id === activeChatId
+                    ? "1px solid rgba(0,255,213,0.35)"
+                    : "1px solid transparent",
+                }}
+              >
 
-            <div>
-              Resume Preparation
-            </div>
+                {chat.pinned
+                  ? `📌 ${chat.title}`
+                  : chat.title}
 
-            <div>
-              General Conversation
-            </div>
+              </div>
+
+            ))}
 
           </div>
 
@@ -460,8 +771,6 @@ export default function Home() {
         </button>
 
       </aside>
-
-      {/* CHAT */}
 
       <section className="chat-section">
 
@@ -500,37 +809,9 @@ export default function Home() {
 
               </p>
 
-              {/* SUGGESTIONS */}
-
-              <div className="suggestion-grid">
-
-                {suggestions.map(
-                  (item,index)=>(
-
-                    <button
-
-                      key={index}
-
-                      onClick={() =>
-                        setInput(item)
-                      }
-
-                    >
-
-                      {item}
-
-                    </button>
-
-                  )
-                )}
-
-              </div>
-
             </motion.div>
 
           )}
-
-          {/* MESSAGES */}
 
           <AnimatePresence>
 
@@ -576,8 +857,6 @@ export default function Home() {
 
           </AnimatePresence>
 
-          {/* LOADING */}
-
           {loading && (
 
             <div className="typing-box">
@@ -591,8 +870,6 @@ export default function Home() {
           )}
 
         </div>
-
-        {/* INPUT */}
 
         <div className="input-container">
 
