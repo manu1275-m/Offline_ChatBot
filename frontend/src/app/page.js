@@ -296,33 +296,40 @@ useEffect(() => {
 
   const newChat = () => {
 
-    const id = Date.now().toString();
+  if (
+    messages.length === 0 &&
+    activeChatId
+  ) {
+    return;
+  }
 
-    const newChatData = {
-      id,
-      title: "New Chat",
-      messages: [],
-      pinned: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+  const id = Date.now().toString();
 
-    setChats((prev) =>
-      sortChats([
-        newChatData,
-        ...prev,
-      ])
-    );
-
-    setActiveChatId(id);
-
-    setMessages([]);
-
-    setInput("");
-
-    setStarted(true);
-
+  const newChatData = {
+    id,
+    title: "New Chat",
+    messages: [],
+    pinned: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
+
+  setChats((prev) =>
+    sortChats([
+      newChatData,
+      ...prev,
+    ])
+  );
+
+  setActiveChatId(id);
+
+  setMessages([]);
+
+  setInput("");
+
+  setStarted(true);
+
+};
 
   const openChat = (chat) => {
 
