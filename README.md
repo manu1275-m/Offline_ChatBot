@@ -1,5 +1,23 @@
 # Offline Chat Bot
 
+An AI-powered offline desktop chatbot for placement preparation, technical interviews, HR interviews, DSA learning, and resume assistance.
+
+## Download
+
+Latest Release:
+
+https://github.com/manu1275-m/Offline_ChatBot/releases/latest
+
+## Features
+
+- Offline AI Chatbot
+- Qwen2.5 Local Language Model
+- FAISS Vector Retrieval
+- FastAPI Backend
+- Electron Desktop Application
+- Multiple Chat Support
+- Local Chat Storage
+
 Offline Chat Bot is a desktop AI assistant built using Next.js, Electron, FastAPI, FAISS, Sentence Transformers, and a local GGUF language model.
 
 It works fully offline after installation and is designed for placement preparation, interview practice, DSA help, resume guidance, and general conversations.
