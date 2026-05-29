@@ -46,6 +46,18 @@
       {
         "from": "../dist/OfflineChatbotBackend",
         "to": "backend"
+      },
+      {
+        "from": "../embeddings.npy",
+        "to": "embeddings.npy"
+      },
+      {
+        "from": "../faiss_index.index",
+        "to": "faiss_index.index"
+      },
+      {
+        "from": "../placement_data.csv",
+        "to": "placement_data.csv"
       }
     ],
     "win": {
