@@ -6,7 +6,7 @@ An AI-powered offline desktop chatbot for placement preparation, technical inter
 
 Latest Release:
 
-github.com/manu1275-m/Offline_ChatBot/releases/tag/v1.0.0
+https://github.com/manu1275-m/Offline_ChatBot/releases/tag/v1.0.0
 
 ## Features
 
