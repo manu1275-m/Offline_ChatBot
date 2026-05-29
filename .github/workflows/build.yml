@@ -31,3 +31,9 @@ jobs:
       - name: Build Electron Installer
         working-directory: frontend
         run: npm run dist
+
+      - name: Upload Installer Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Offline-ChatBot-Installer
+          path: frontend/release/*.exe
