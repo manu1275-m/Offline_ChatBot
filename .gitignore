@@ -15,3 +15,7 @@ frontend/.next/
 frontend/out/
 frontend/release/
 frontend/package-lock.json
+/placement_data.csv
+/embeddings.npy
+/faiss_index.index
+/models
